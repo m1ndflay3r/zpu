@@ -91,6 +91,7 @@ zpu_LOAD() {
       zpu_register_postcount=$((zpu_register_postcount+1)) && \
       # unset zpu_mem array indice corresponding to added register item
       zpu_mem["$zpu_load_item"]=""
+      ## todo: adjust memory address table to reflect changes in zpu_mem
     # if count is greater than endaddr, break loop
     [ "$zpu_memory_laddress_counter" -gt "$zpu_load_endaddr" ] && break
   done
