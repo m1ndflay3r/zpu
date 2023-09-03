@@ -1,0 +1,289 @@
+#!/usr/bin/env zsh
+
+## reset memory and registers
+unset zpu_register
+declare -a zpu_register
+
+unset zpu_mem
+declare -a zpu_mem
+
+## reset memory + register address tables
+unset zpu_mem_addr_table
+declare -a zpu_mem_addr_table
+
+unset zpu_reg_addr_table
+declare -a zpu_reg_addr_table
+
+## basic logic gates
+zpu_AND() {
+}
+
+zpu_OR() {
+}
+
+zpu_XOR() {
+}
+
+zpu_XAND() {
+}
+
+zpu_NOR() {
+}
+
+zpu_NOT() {
+}
+
+zpu_XNOR() {
+}
+
+## math instructions
+zpu_ADD() {
+}
+
+zpu_SUB() {
+}
+
+zpu_MUL() {
+}
+
+zpu_DIV() {
+}
+
+## load + store
+zpu_LOAD() {
+
+  # failure printout
+  zpu_load_fail() {
+    print -n 'ERR: Received invalid LOAD instruction ('
+  }
+
+  # fail if zpu_load_mem_table_addr is empty
+  [ -z "$zpu_load_mem_table_addr" ] && \
+    zpu_load_fail && \
+    print 'null tab addr)' && \
+    return 1
+
+  # fail if table indice at given address is empty
+  [ -z "$zpu_mem_addr_table["$zpu_load_mem_table_addr"]" ] && \
+    zpu_load_fail && \
+    print 'invalid address)' && \
+    return 1
+
+  ## get startaddr and endaddr from tableaddr
+
+  # save data contained within mem addr table indice at provided num to variable, unset reused test vars
+  unset zpu_load_mem_table_var
+  zpu_load_mem_table_var="$zpu_mem_addr_table["$zpu_load_mem_table_addr"]"
+  unset zpu_load_startaddr
+  unset zpu_load_endaddr
+  # use space as delimiter, separate address table indice variable into individual startaddr and endaddr
+  IFS=$' '
+  for zpu_load_range_from_table in $=zpu_load_mem_table_var; do
+    # if start address not empty (meaning loop has iterated once) and endaddress is empty, make item endaddr
+    [ ! -z "$zpu_load_startaddr" ] && [ -z "$zpu_load_endaddr" ] && \
+      zpu_load_endaddr=$zpu_load_range_from_table
+    # if start address is empty (meaning loop has not iterated once), make item startaddr
+    [ -z "$zpu_load_startaddr" ] && \
+      zpu_load_startaddr=$zpu_load_range_from_table
+  done
+  unset IFS
+
+  # fail if startaddr or endaddr is left empty after data retrieval
+  ([ -z "$zpu_load_startaddr" ] || [ -z "$zpu_load_endaddr" ]) && \
+    zpu_load_fail && \
+    print 'table addr invalid)' && \
+    return 1
+
+  # count number of items in memory (OOB prevention)
+  zpu_load_memory_oob_count=0
+  for zpu_load_oob_check in $=zpu_mem; do
+    zpu_load_memory_oob_count=$((zpu_load_memory_oob_count+1))
+  done
+
+  # fail if memory item count < requested startaddr (OOB prevention)
+  [ "$zpu_load_memory_oob_count" -lt "$zpu_load_startaddr" ] && \
+    zpu_load_fail && \
+    print 'Out Of Boundary)' && \
+    return 1
+
+  # determine number of items in register before load
+  zpu_load_register_precount=0
+  for zpu_register_items in $=zpu_register; do
+    zpu_load_register_precount=$((zpu_load_register_precount+1))
+  done
+
+  # save precount to postcount for efficiency
+  zpu_load_register_postcount=$zpu_load_register_precount
+
+  ## iterate over each item in zpu_mem, counting up by 1 as we go.
+  ## if count >= startaddr, add iterated memory item to register array.
+  ## increate postcount by 1 for each item added.
+  ## if count < endaddr, stop adding items and break loop.
+
+  # set addr counter to 0
+  zpu_load_mem_addr_counter=0
+
+  # count items in zpu_mem, using count as memory address (via array indices).
+  for zpu_load_item in $=zpu_mem; do
+    zpu_load_mem_addr_counter=$((zpu_load_mem_addr_counter+1))
+    # if count >= startaddr && count <= endaddr; then
+      # add data contained in zpu_mem[$zpu_load_item] to zpu register array
+      # increase register item count by 1
+      # unset zpu_mem array indice corresponding to added register item
+    # if count is greater than endaddr; then
+      # break loop
+    [ "$zpu_load_mem_addr_counter" -ge "$zpu_load_startaddr" ] && [ "$zpu_load_mem_addr_counter" -le "$zpu_load_endaddr" ] && \
+      zpu_register+=("$zpu_load_item") && \
+      zpu_load_register_postcount=$((zpu_load_register_postcount+1)) && \
+      zpu_mem["$zpu_load_mem_addr_counter"]=""
+    [ "$zpu_load_mem_addr_counter" -gt "$zpu_load_endaddr" ] && \
+      break
+  done
+
+  # increase precount by 1 to determine startaddr of loaded item(s)
+  zpu_load_register_precount=$((zpu_load_register_precount+1))
+
+  # precount items in addr_table (each addr_table item contains a start and endaddr, for querying)
+  zpu_load_reg_addr_count=0
+  for zpu_addr in $=zpu_reg_addr_table; do
+    zpu_load_reg_addr_count=$((zpu_load_reg_addr_count+1))
+  done
+
+  # add register start and end addresses to register address table as an item.
+  zpu_reg_addr_table+=("$zpu_load_register_precount $zpu_load_register_postcount")
+
+  # increase item count by 1.
+  zpu_load_reg_addr_count=$((zpu_load_reg_addr_count+1))
+
+  # unset memory table indice corresponding to loaded addresses
+  zpu_mem_addr_table["$zpu_load_mem_table_addr"]=""
+
+  # unset input variable(s)
+  unset zpu_load_mem_table_addr
+
+  # print tabled address of loaded data (for querying), and return 0
+  print -n "$zpu_load_reg_addr_count"
+  return 0
+}
+
+zpu_STORE() {
+
+  # failure printout
+  zpu_store_fail() {
+    print -n 'ERR: Received invalid STORE instruction ('
+  }
+
+  # fail if zpu_store_reg_table_addr is empty
+  [ -z "$zpu_store_reg_table_addr" ] && \
+    zpu_store_fail && \
+    print 'null tab addr)' && \
+    return 1
+
+  # fail if table indice at given address is empty
+  [ -z "$zpu_reg_addr_table["$zpu_store_reg_table_addr"]" ] && \
+    zpu_store_fail && \
+    print 'invalid address)' && \
+    return 1
+
+  ## get startaddr and endaddr from tableaddr
+
+  # save data contained within reg addr table indice at provided num to variable, unset reused vars
+  unset zpu_store_reg_table_var
+  zpu_store_reg_table_var="$zpu_reg_addr_table["$zpu_store_reg_table_addr"]"
+  unset zpu_store_startaddr
+  unset zpu_store_endaddr
+  # use space as delimiter, separate address table indice variable into individual startaddr and endaddr
+  IFS=$' '
+  for zpu_store_range_from_table in $=zpu_store_reg_table_var; do
+    # if start address not empty (meaning loop has iterated once) and endaddress is empty, make item endaddr
+    [ ! -z "$zpu_store_startaddr" ] && [ -z "$zpu_store_endaddr" ] && \
+      zpu_store_endaddr=$zpu_store_range_from_table
+    # if start address is empty (meaning loop has not iterated once), make item startaddr
+    [ -z "$zpu_store_startaddr" ] && \
+      zpu_store_startaddr=$zpu_store_range_from_table
+  done
+  unset IFS
+
+  # fail if startaddr or endaddr is left empty after data retrieval
+  ([ -z "$zpu_store_startaddr" ] || [ -z "$zpu_store_endaddr" ]) && \
+    zpu_store_fail && \
+    print 'table addr invalid)' && \
+    return 1
+
+  # count number of items in register (OOB prevention)
+  zpu_store_register_oob_count=0
+  for zpu_store_oob_check in $=zpu_register; do
+    zpu_store_register_oob_count=$((zpu_store_register_oob_count+1))
+  done
+
+  # fail if register item count < requested startaddr (OOB prevention)
+  [ "$zpu_store_register_oob_count" -lt "$zpu_store_startaddr" ] && \
+    zpu_store_fail && \
+    print 'Out Of Boundary)' && \
+    return 1
+
+  # determine number of items in memory before store
+  zpu_store_memory_precount=0
+  for zpu_memory_items in $=zpu_mem; do
+    zpu_store_memory_precount=$((zpu_store_memory_precount+1))
+  done
+
+  # save precount to postcount for efficiency
+  zpu_store_memory_postcount=$zpu_store_memory_precount
+
+  ## iterate over each item in zpu_register, counting up by 1 as we go.
+  ## if count >= startaddr, add iterated register item to memory array.
+  ## increate postcount by 1 for each item added.
+  ## if count < endaddr, stop adding items and break loop.
+
+  # set addr counter to 0
+  zpu_store_reg_addr_counter=0
+
+  # count items in zpu_register, using count as register address (via array indices).
+  for zpu_store_item in $=zpu_register; do
+    zpu_store_reg_addr_counter=$((zpu_store_reg_addr_counter+1))
+    # if count >= startaddr && count <= endaddr; then
+      # add data contained in zpu_register[$zpu_store_item] to zpu memory array
+      # increase memory item count by 1
+      # unset zpu_register array indice corresponding to added memory item
+    # if count is greater than endaddr; then
+      # break loop
+    [ "$zpu_store_reg_addr_counter" -ge "$zpu_store_startaddr" ] && [ "$zpu_store_reg_addr_counter" -le "$zpu_store_endaddr" ] && \
+      zpu_mem+=("$zpu_store_item") && \
+      zpu_store_memory_postcount=$((zpu_store_memory_postcount+1)) && \
+      zpu_register["$zpu_store_reg_addr_counter"]=""
+    [ "$zpu_store_reg_addr_counter" -gt "$zpu_store_endaddr" ] && \
+      break
+  done
+
+  # increase precount by 1 to determine startaddr of stored item(s)
+  zpu_store_memory_precount=$((zpu_store_memory_precount+1))
+
+  # precount items in addr_table (each addr_table item contains a start and endaddr, for querying)
+  zpu_store_mem_addr_count=0
+  for zpu_addr in $=zpu_mem_addr_table; do
+    zpu_store_mem_addr_count=$((zpu_store_mem_addr_count+1))
+  done
+
+  # add memory start and end addresses to memory address table as an item.
+  zpu_mem_addr_table+=("$zpu_store_memory_precount $zpu_store_memory_postcount")
+
+  # increase item count by 1.
+  zpu_store_mem_addr_count=$((zpu_store_mem_addr_count+1))
+
+  # unset register table indice corresponding to stored addresses
+  zpu_reg_addr_table["$zpu_store_reg_table_addr"]=""
+
+  # unset input variable(s)
+  unset zpu_store_reg_table_addr
+
+  # print tabled address of stored data (for querying), and return 0
+  print -n "$zpu_store_mem_addr_count"
+  return 0
+}
+
+zpu_READ() {
+}
+
+zpu_WRITE() {
+}
