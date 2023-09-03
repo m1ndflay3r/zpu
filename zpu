@@ -106,6 +106,12 @@ zpu_LOAD() {
     print 'table addr invalid)' && \
     return 1
 
+  # fail if either startaddr or endaddr is not valid int
+  (! [[ $zpu_load_startaddr =~ ^[0-9]+$ ]] || ! [[ $zpu_load_endaddr =~ ^[0-9]+$ ]]) && \
+    zpu_load_fail && \
+    print 'received non-int value)' && \
+    return 1
+
   # fail if memory item count < requested endaddr (OOB prevention)
   [ "$zpu_sparse_mem_item_count" -lt "$zpu_load_endaddr" ] && \
     zpu_load_fail && \
@@ -203,6 +209,12 @@ zpu_STORE() {
   ([ -z "$zpu_store_startaddr" ] || [ -z "$zpu_store_endaddr" ]) && \
     zpu_store_fail && \
     print 'table addr invalid)' && \
+    return 1
+
+  # fail if either startaddr or endaddr is not valid int
+  (! [[ $zpu_store_startaddr =~ ^[0-9]+$ ]] || ! [[ $zpu_store_endaddr =~ ^[0-9]+$ ]]) && \
+    zpu_store_fail && \
+    print 'received non-int value)' && \
     return 1
 
   # fail if register item count < requested endaddr (OOB prevention)
