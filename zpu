@@ -44,6 +44,10 @@ zpu_NOT() {
 zpu_XNOR() {
 }
 
+zpu_NOOP() {
+  sleep 0.01
+}
+
 ## math instructions
 zpu_ADD() {
 }
