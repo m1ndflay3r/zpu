@@ -184,8 +184,21 @@ zpu_STORE() {
   # use space as delimiter, separate address table indice variable into individual startaddr and endaddr
   IFS=$' '
   for zpu_store_range_from_table in $=zpu_store_reg_table_var; do
+    # if start address not empty (meaning loop has iterated once) and endaddress is empty, make item endaddr
+    [ ! -z "$zpu_store_startaddr" ] && [ -z "$zpu_store_endaddr" ] && \
+      zpu_store_endaddr=$zpu_store_range_from_table
+    # if start address is empty (meaning loop has not iterated once), make item startaddr
+    [ -z "$zpu_store_startaddr" ] && \
+      zpu_store_startaddr=$zpu_store_range_from_table
   done
   unset IFS
+
+  # fail if startaddr or endaddr is left empty after data retrieval
+  ([ -z "$zpu_store_startaddr" ] || [ -z "$zpu_store_endaddr" ]) && \
+    zpu_store_fail && \
+    print 'table addr invalid)' && \
+    return 1
+
 }
 
 zpu_READ() {
