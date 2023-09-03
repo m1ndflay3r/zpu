@@ -199,6 +199,64 @@ zpu_STORE() {
     print 'table addr invalid)' && \
     return 1
 
+  # determine number of items in memory before store
+  zpu_store_memory_precount=0
+  for zpu_memory_items in $=zpu_mem; do
+    zpu_store_memory_precount=$((zpu_store_memory_precount+1))
+  done
+
+  # save precount to postcount for efficiency
+  zpu_store_memory_postcount=$zpu_store_memory_precount
+
+  ## iterate over each item in zpu_register, counting up by 1 as we go.
+  ## if count >= startaddr, add iterated register item to memory array.
+  ## increate postcount by 1 for each item added.
+  ## if count < endaddr, stop adding items and break loop.
+
+  # set addr counter to 0
+  zpu_store_reg_addr_counter=0
+
+  # count items in zpu_register, using count as register address (via array indices).
+  for zpu_store_item in $=zpu_register; do
+    zpu_store_reg_addr_counter=$((zpu_store_reg_addr_counter+1))
+    # if count >= startaddr && count <= endaddr; then
+      # add data contained in zpu_register[$zpu_store_item] to zpu memory array
+      # increase memory item count by 1
+      # unset zpu_register array indice corresponding to added memory item
+    # if count is greater than endaddr; then
+      # break loop
+    [ "$zpu_store_reg_addr_counter" -ge "$zpu_store_startaddr" ] && [ "$zpu_store_reg_addr_counter" -le "$zpu_store_endaddr" ] && \
+      zpu_mem+=("$zpu_store_item") && \
+      zpu_store_memory_postcount=$((zpu_store_memory_postcount+1)) && \
+      zpu_register["$zpu_store_item"]=""
+    [ "$zpu_store_reg_addr_counter" -gt "$zpu_store_endaddr" ] && \
+      break
+  done
+
+  # increase precount by 1 to determine startaddr of stored item(s)
+  zpu_store_memory_precount=$((zpu_store_memory_precount+1))
+
+  # precount items in addr_table (each addr_table item contains a start and endaddr, for querying)
+  zpu_store_mem_addr_count=0
+  for zpu_addr in $=zpu_mem_addr_table; do
+    zpu_store_mem_addr_count=$((zpu_store_mem_addr_count+1))
+  done
+
+  # add memory start and end addresses to memory address table as an item.
+  zpu_mem_addr_table+=("$zpu_store_memory_precount $zpu_store_memory_postcount")
+
+  # increase item count by 1.
+  zpu_store_mem_addr_count=$((zpu_store_mem_addr_count+1))
+
+  # unset memory table indice corresponding to loaded addresses
+  zpu_reg_addr_table["$zpu_store_reg_table_addr"]=""
+
+  # unset input variable(s)
+  unset zpu_store_reg_table_addr
+
+  # print tabled address of stored data (for querying), and return 0
+  print -n "$zpu_store_mem_addr_count"
+  return 0
 }
 
 zpu_READ() {
