@@ -94,6 +94,18 @@ zpu_LOAD() {
     print 'table addr invalid)' && \
     return 1
 
+  # count number of items in memory (OOB prevention)
+  zpu_load_memory_oob_count=0
+  for zpu_load_oob_check in $=zpu_mem; do
+    zpu_load_memory_oob_count=$((zpu_load_memory_oob_count+1))
+  done
+
+  # fail if memory item count < requested startaddr (OOB prevention)
+  [ "$zpu_load_memory_oob_count" -lt "$zpu_load_startaddr" ] && \
+    zpu_load_fail && \
+    print 'Out Of Boundary)' && \
+    return 1
+
   # determine number of items in register before load
   zpu_load_register_precount=0
   for zpu_register_items in $=zpu_register; do
@@ -175,7 +187,7 @@ zpu_STORE() {
 
   ## get startaddr and endaddr from tableaddr
 
-  # save data contained within mem addr table indice at provided num to variable, unset reused vars
+  # save data contained within reg addr table indice at provided num to variable, unset reused vars
   unset zpu_store_reg_table_var
   zpu_store_reg_table_var="$zpu_reg_addr_table["$zpu_store_reg_table_addr"]"
   unset zpu_store_startaddr
@@ -196,6 +208,18 @@ zpu_STORE() {
   ([ -z "$zpu_store_startaddr" ] || [ -z "$zpu_store_endaddr" ]) && \
     zpu_store_fail && \
     print 'table addr invalid)' && \
+    return 1
+
+  # count number of items in register (OOB prevention)
+  zpu_store_register_oob_count=0
+  for zpu_store_oob_check in $=zpu_register; do
+    zpu_store_register_oob_count=$((zpu_store_register_oob_count+1))
+  done
+
+  # fail if register item count < requested startaddr (OOB prevention)
+  [ "$zpu_store_register_oob_count" -lt "$zpu_store_startaddr" ] && \
+    zpu_store_fail && \
+    print 'Out Of Boundary)' && \
     return 1
 
   # determine number of items in memory before store
