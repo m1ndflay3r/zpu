@@ -72,14 +72,14 @@ zpu_LOAD() {
 
   ## get startaddr and endaddr from tableaddr
 
-  # save data contained within mem addr table indice at provided num to variable
-  unset zpu_table_address_loop_var
-  zpu_table_address_loop_var="$zpu_mem_addr_table["$zpu_load_mem_table_addr"]"
+  # save data contained within mem addr table indice at provided num to variable, unset reused test vars
+  unset zpu_load_mem_table_var
+  zpu_load_mem_table_var="$zpu_mem_addr_table["$zpu_load_mem_table_addr"]"
   unset zpu_load_startaddr
   unset zpu_load_endaddr
   # use space as delimiter, separate address table indice variable into individual startaddr and endaddr
   IFS=$' '
-  for zpu_load_range_from_table in $=zpu_table_address_loop_var; do
+  for zpu_load_range_from_table in $=zpu_load_mem_table_var; do
     # if start address not empty (meaning loop has iterated once) and endaddress is empty, make item endaddr
     [ ! -z "$zpu_load_startaddr" ] && [ -z "$zpu_load_endaddr" ] && \
       zpu_load_endaddr=$zpu_load_range_from_table
@@ -156,7 +156,36 @@ zpu_LOAD() {
 }
 
 zpu_STORE() {
-  
+
+  # failure printout
+  zpu_store_fail() {
+    print -n 'ERR: Received invalid STORE instruction ('
+  }
+
+  # fail if zpu_store_reg_table_addr is empty
+  [ -z "$zpu_store_reg_table_addr" ] && \
+    zpu_store_fail && \
+    print 'null tab addr)' && \
+    return 1
+
+  # fail if table indice at given address is empty
+  [ -z "$zpu_reg_addr_table["$zpu_store_reg_table_addr"]" ] && \
+    zpu_store_fail && \
+    print 'invalid address)' && \
+    return 1
+
+  ## get startaddr and endaddr from tableaddr
+
+  # save data contained within mem addr table indice at provided num to variable, unset reused vars
+  unset zpu_store_reg_table_var
+  zpu_store_reg_table_var="$zpu_reg_addr_table["$zpu_store_reg_table_addr"]"
+  unset zpu_store_startaddr
+  unset zpu_store_endaddr
+  # use space as delimiter, separate address table indice variable into individual startaddr and endaddr
+  IFS=$' '
+  for zpu_store_range_from_table in $=zpu_store_reg_table_var; do
+  done
+  unset IFS
 }
 
 zpu_READ() {
