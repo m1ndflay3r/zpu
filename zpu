@@ -248,7 +248,7 @@ zpu_STORE() {
   # increase item count by 1.
   zpu_store_mem_addr_count=$((zpu_store_mem_addr_count+1))
 
-  # unset memory table indice corresponding to loaded addresses
+  # unset memory table indice corresponding to stored addresses
   zpu_reg_addr_table["$zpu_store_reg_table_addr"]=""
 
   # unset input variable(s)
