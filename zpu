@@ -18,6 +18,10 @@ declare -a zpu_reg_addr_table
 zpu_sparse_mem_item_count=0
 zpu_sparse_reg_item_count=0
 
+## reset memory + register table counts
+zpu_sparse_mem_table_count=0
+zpu_sparse_reg_table_count=0
+
 ## basic logic gates
 zpu_AND() {
 }
@@ -98,23 +102,14 @@ zpu_LOAD() {
     print 'table addr invalid)' && \
     return 1
 
-  # count number of items in memory (OOB prevention)
-  zpu_load_memory_oob_count=0
-  for zpu_load_oob_check in $=zpu_mem; do
-    zpu_load_memory_oob_count=$((zpu_load_memory_oob_count+1))
-  done
-
   # fail if memory item count < requested startaddr (OOB prevention)
-  [ "$zpu_load_memory_oob_count" -lt "$zpu_load_startaddr" ] && \
+  [ "$zpu_sparse_mem_item_count" -lt "$zpu_load_startaddr" ] && \
     zpu_load_fail && \
     print 'Out Of Boundary)' && \
     return 1
 
   # determine number of items in register before load
-  zpu_load_register_precount=0
-  for zpu_register_items in $=zpu_register; do
-    zpu_load_register_precount=$((zpu_load_register_precount+1))
-  done
+  zpu_load_register_precount=$zpu_sparse_reg_item_count
 
   # save precount to postcount for efficiency
   zpu_load_register_postcount=$zpu_load_register_precount
@@ -128,8 +123,9 @@ zpu_LOAD() {
   zpu_load_mem_addr_counter=0
 
   # count items in zpu_mem, using count as memory address (via array indices).
-  for zpu_load_item in $=zpu_mem; do
+  until [ "$zpu_load_mem_addr_counter" -gt "$zpu_sparse_mem_item_count"]; do
     zpu_load_mem_addr_counter=$((zpu_load_mem_addr_counter+1))
+    zpu_load_item="$zpu_mem["$zpu_load_mem_addr_counter"]"
     # if count >= startaddr && count <= endaddr; then
       # add data contained in zpu_mem[$zpu_load_item] to zpu register array
       # increase register item count by 1
@@ -139,6 +135,7 @@ zpu_LOAD() {
     [ "$zpu_load_mem_addr_counter" -ge "$zpu_load_startaddr" ] && [ "$zpu_load_mem_addr_counter" -le "$zpu_load_endaddr" ] && \
       zpu_register+=("$zpu_load_item") && \
       zpu_load_register_postcount=$((zpu_load_register_postcount+1)) && \
+      zpu_sparse_reg_item_count=$((zpu_sparse_reg_item_count+1)) && \
       zpu_mem["$zpu_load_mem_addr_counter"]=""
     [ "$zpu_load_mem_addr_counter" -gt "$zpu_load_endaddr" ] && \
       break
@@ -147,17 +144,11 @@ zpu_LOAD() {
   # increase precount by 1 to determine startaddr of loaded item(s)
   zpu_load_register_precount=$((zpu_load_register_precount+1))
 
-  # precount items in addr_table (each addr_table item contains a start and endaddr, for querying)
-  zpu_load_reg_addr_count=0
-  for zpu_addr in $=zpu_reg_addr_table; do
-    zpu_load_reg_addr_count=$((zpu_load_reg_addr_count+1))
-  done
-
   # add register start and end addresses to register address table as an item.
   zpu_reg_addr_table+=("$zpu_load_register_precount $zpu_load_register_postcount")
 
-  # increase item count by 1.
-  zpu_load_reg_addr_count=$((zpu_load_reg_addr_count+1))
+  # increase table count by 1.
+  zpu_sparse_reg_table_count=$((zpu_sparse_reg_table_count+1))
 
   # unset memory table indice corresponding to loaded addresses
   zpu_mem_addr_table["$zpu_load_mem_table_addr"]=""
@@ -166,7 +157,7 @@ zpu_LOAD() {
   unset zpu_load_mem_table_addr
 
   # print tabled address of loaded data (for querying), and return 0
-  print -n "$zpu_load_reg_addr_count"
+  print -n "$zpu_sparse_reg_table_count"
   return 0
 }
 
