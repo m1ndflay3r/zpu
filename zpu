@@ -124,7 +124,7 @@ zpu_LOAD() {
     [ "$zpu_load_mem_addr_counter" -ge "$zpu_load_startaddr" ] && [ "$zpu_load_mem_addr_counter" -le "$zpu_load_endaddr" ] && \
       zpu_register+=("$zpu_load_item") && \
       zpu_load_register_postcount=$((zpu_load_register_postcount+1)) && \
-      zpu_mem["$zpu_load_item"]=""
+      zpu_mem["$zpu_load_mem_addr_counter"]=""
     [ "$zpu_load_mem_addr_counter" -gt "$zpu_load_endaddr" ] && \
       break
   done
@@ -228,7 +228,7 @@ zpu_STORE() {
     [ "$zpu_store_reg_addr_counter" -ge "$zpu_store_startaddr" ] && [ "$zpu_store_reg_addr_counter" -le "$zpu_store_endaddr" ] && \
       zpu_mem+=("$zpu_store_item") && \
       zpu_store_memory_postcount=$((zpu_store_memory_postcount+1)) && \
-      zpu_register["$zpu_store_item"]=""
+      zpu_register["$zpu_store_reg_addr_counter"]=""
     [ "$zpu_store_reg_addr_counter" -gt "$zpu_store_endaddr" ] && \
       break
   done
