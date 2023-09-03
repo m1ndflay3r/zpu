@@ -14,6 +14,10 @@ declare -a zpu_mem_addr_table
 unset zpu_reg_addr_table
 declare -a zpu_reg_addr_table
 
+## reset memory + register item counts
+zpu_sparse_mem_item_count=0
+zpu_sparse_reg_item_count=0
+
 ## basic logic gates
 zpu_AND() {
 }
