@@ -22,11 +22,9 @@ zpu_sparse_reg_item_count=0
 zpu_sparse_mem_table_count=0
 zpu_sparse_reg_table_count=0
 
-## reset ljmp & rjmp (reg+mem)
-zpu_mem_ljmp=0
-zpu_mem_rjmp=0
-zpu_reg_ljmp=0
-zpu_reg_rjmp=0
+## reset jmp (reg+mem)
+zpu_mem_jmp=0
+zpu_reg_jmp=0
 
 ## basic logic gates
 zpu_AND() {
@@ -75,6 +73,9 @@ zpu_RJMP() {
 }
 
 zpu_JMPTO() {
+}
+
+zpu_JMPBK() {
 }
 
 ## load + store
