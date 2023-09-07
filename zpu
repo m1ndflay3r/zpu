@@ -22,10 +22,6 @@ zpu_sparse_reg_item_count=0
 zpu_sparse_mem_table_count=0
 zpu_sparse_reg_table_count=0
 
-## reset jmp (reg+mem)
-zpu_mem_jmp=0
-zpu_reg_jmp=0
-
 ## reset pointer
 zpu_pointer=0
 
@@ -70,19 +66,45 @@ zpu_DIV() {
 
 ## jump instructions
 zpu_LJMP() {
+  # error out if zpu_ljmp_num is empty or invalid int
+  ([ -z "$zpu_ljmp_num" ] || ! [[ $zpu_ljmp_num =~ ^[0-9]+$ ]]) && \
+    print 'Received invalid LJMP instruction (invalid input)' && \
+    unset zpu_ljmp_num && \
+    return 1
+  # subtract $zpu_ljmp_num from zpu_pointer if result is 1 or greater and less than item count
+  zpu_ljmp_oob_prev=$((zpu_pointer-zpu_ljmp_num))
+  [ "$zpu_ljmp_oob_prev" -gt 0 ] && [ "$zpu_ljmp_oob_prev" -le "$zpu_sparse_mem_item_count" ] && \
+    zpu_pointer=$((zpu_pointer-zpu_ljmp_num)) && \
+    unset zpu_ljmp_num && \
+    return 0
+  # error out if OOB check failed
+  print 'Received invalid LJMP instruction (Out Of Boundary)'
+  unset zpu_ljmp_num
+  return 1
 }
 
 zpu_RJMP() {
+  # error out if zpu_rjmp_num is empty or invalid int
+  ([ -z "$zpu_rjmp_num" ] || ! [[ $zpu_rjmp_num =~ ^[0-9]+$ ]]) && \
+    print 'Received invalid RJMP instruction (invalid input)' && \
+    unset zpu_rjmp_num && \
+    return 1
+  # add $zpu_rjmp_num to zpu_pointer if result is 1 or greater and less than item count
+  zpu_rjmp_oob_prev=$((zpu_pointer+zpu_rjmp_num))
+  [ "$zpu_rjmp_oob_prev" -gt 0 ] && [ "$zpu_rjmp_oob_prev" -le "$zpu_sparse_mem_item_count" ] && \
+    zpu_pointer=$((zpu_pointer+zpu_rjmp_num)) && \
+    unset zpu_rjmp_num && \
+    return 0
+  # error out if OOB check failed
+  print 'Received invalid RJMP instruction (Out Of Boundary)'
+  unset zpu_rjmp_num
+  return 1
 }
 
 zpu_JMPTO() {
 }
 
 zpu_JMPBK() {
-}
-
-zpu_SKIPN() {
-  zpu_pointer=$((zpu_pointer+1))
 }
 
 ## load + store
