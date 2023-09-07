@@ -81,6 +81,10 @@ zpu_JMPTO() {
 zpu_JMPBK() {
 }
 
+zpu_SKIPN() {
+  zpu_pointer=$((zpu_pointer+1))
+}
+
 ## load + store
 zpu_LOAD() {
 
