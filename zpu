@@ -344,7 +344,7 @@ zpu_READ() {
     zpu_mem+=("$zpu_read_exec_contents") && \
     zpu_sparse_mem_item_count=$((zpu_sparse_mem_item_count+1))
   [ "$zpu_read_is_exec" = 1 ] && \
-    zpu_read_exec_div
+    zpu_read_exec_div && \
     zpu_read_is_exec=0
 
   # increase memory item precount by 1 to determine startaddr of file data
