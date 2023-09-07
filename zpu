@@ -292,7 +292,79 @@ zpu_STORE() {
   return 0
 }
 
+## read + write
+# provides input / output via host file path
+
 zpu_READ() {
+
+  # failure printout
+  zpu_read_fail() {
+    print -n 'received invalid READ instruction ('
+  }
+
+  # error out if zpu_read_file_to_mem (filepath for readin) is empty
+  [ -z "zpu_read_file_to_mem" ] && \
+    zpu_read_fail && \
+    print 'null filepath)' && \
+    return 1
+
+  # error out if zpu_read_file_to_mem does not exist or is a directory
+  ([[ ! -e "$zpu_read_file_to_mem" ]] || [ -d "$zpu_read_file_to_mem" ]) && \
+    zpu_read_fail && \
+    print 'invalid filepath)' && \
+    return 1
+
+  ## read file at path "$zpu_read_file_to_mem" into variable
+  # fail if read returns non-zero
+  unset zpu_read_file_contents
+  zpu_read_file_contents=$(< "$zpu_read_file_to_mem") || \
+    zpu_read_fail && \
+    print 'cannot read file)' && \
+    return 1
+
+  ## handling of file contents
+  # preserve item count of zpu_mem pre-read
+  zpu_read_mem_precount=$zpu_sparse_mem_item_count
+
+  # set zpu_read_is_exec to 0 if empty (handle as regular file if 0, handle as instructions if 1)
+  [ -z "$zpu_read_is_exec" ] && \
+    zpu_read_is_exec=0
+
+  # if zpu_read_is_exec = 0, store entire file under one memory indice
+  # if zpu_read_is_exec = 1, divide contents by line adding each item to zpu_mem
+  zpu_read_exec_div() {
+    IFS=$'\n'
+    for zpu_read_exec_contents in $=zpu_read_file_contents; do
+      zpu_mem+=("$zpu_read_exec_contents")
+      zpu_sparse_mem_item_count=$((zpu_sparse_mem_item_count+1))
+    done
+    unset IFS
+  }
+  [ "$zpu_read_is_exec" = 0 ] && \
+    zpu_mem+=("$zpu_read_exec_contents") && \
+    zpu_sparse_mem_item_count=$((zpu_sparse_mem_item_count+1))
+  [ "$zpu_read_is_exec" = 1 ] && \
+    zpu_read_exec_div
+    zpu_read_is_exec=0
+
+  # increase memory item precount by 1 to determine startaddr of file data
+  zpu_read_mem_precount=$((zpu_read_mem_precount+1))
+
+  # add file data start and end addresses to memory address table as an item.
+  zpu_mem_addr_table+=("$zpu_read_mem_precount $zpu_sparse_mem_item_count")
+
+  # increase table count by 1.
+  zpu_sparse_mem_table_count=$((zpu_sparse_mem_table_count+1))
+
+  # unset input variable(s)
+  unset zpu_read_file_to_mem
+  unset zpu_read_file_contents
+
+  # print tabled address of read data (for querying), and return 0
+  print -n "$zpu_sparse_mem_table_count"
+  return 0
+}
+
 }
 
 zpu_WRITE() {
