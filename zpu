@@ -26,6 +26,9 @@ zpu_sparse_reg_table_count=0
 zpu_mem_jmp=0
 zpu_reg_jmp=0
 
+## reset pointer
+zpu_pointer=0
+
 ## basic logic gates
 zpu_AND() {
 }
