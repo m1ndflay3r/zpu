@@ -25,6 +25,12 @@ zpu_sparse_reg_table_count=0
 ## reset pointer
 zpu_pointer=0
 
+## reset lseek + rseek
+unset zpu_load_lseek
+unset zpu_load_rseek
+unset zpu_store_lseek
+unset zpu_store_rseek
+
 ## basic logic gates
 zpu_AND() {
 }
@@ -179,6 +185,12 @@ zpu_LOAD() {
   until [ "$zpu_load_mem_addr_counter" -gt "$zpu_sparse_mem_item_count"]; do
     zpu_load_mem_addr_counter=$((zpu_load_mem_addr_counter+1))
     zpu_load_item="$zpu_mem["$zpu_load_mem_addr_counter"]"
+    [ ! -z "$zpu_load_seekleft" ] && \
+      zpu_load_item=${zpu_load_item:"$zpu_load_seekleft"} && \
+      unset zpu_load_seekleft
+    [ ! -z "$zpu_load_seekright" ] && \
+      zpu_load_item=${zpu_load_item: :"$zpu_load_seekright"} && \
+      unset zpu_load_seekright
     # if count >= startaddr && count <= endaddr; then
       # add data contained in zpu_mem[$zpu_load_item] to zpu register array
       # increase register item count by 1
@@ -284,7 +296,13 @@ zpu_STORE() {
   until [ "$zpu_store_reg_addr_counter" -gt "$zpu_sparse_reg_item_count" ]; do
     zpu_store_reg_addr_counter=$((zpu_store_reg_addr_counter+1))
     zpu_store_item="$zpu_register["$zpu_store_reg_addr_counter"]"
-    # if count >= startaddr && count <= endaddr; then
+    [ ! -z "$zpu_store_seekleft" ] && \
+      zpu_store_item=${zpu_store_item:"$zpu_store_seekleft"} && \
+      unset zpu_store_seekleft
+    [ ! -z "$zpu_store_seekright" ] && \
+      zpu_store_item=${zpu_store_item: :"$zpu_store_seekright"} && \
+      unset zpu_store_seekright
+      # if count >= startaddr && count <= endaddr; then
       # add data contained in zpu_register[$zpu_store_item] to zpu memory array
       # increase memory item count by 1
       # unset zpu_register array indice corresponding to added memory item
