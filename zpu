@@ -385,6 +385,9 @@ zpu_READ() {
     unset IFS
   }
   [ "$zpu_read_is_exec" = 0 ] && \
+    zpu_mem+=("zpu_rjmp_num=1 zpu_RJMP") && \
+    zpu_sparse_mem_item_count=$((zpu_sparse_mem_item_count+1)) && \
+    zpu_read_mem_precount=$((zpu_read_mem_precount+1)) && \
     zpu_mem+=("$zpu_read_exec_contents") && \
     zpu_sparse_mem_item_count=$((zpu_sparse_mem_item_count+1))
   [ "$zpu_read_is_exec" = 1 ] && \
@@ -407,8 +410,6 @@ zpu_READ() {
   # print tabled address of read data (for querying), and return 0
   print -n "$zpu_sparse_mem_table_count"
   return 0
-}
-
 }
 
 zpu_WRITE() {
