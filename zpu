@@ -31,6 +31,10 @@ unset zpu_load_rseek
 unset zpu_store_lseek
 unset zpu_store_rseek
 
+## reset symbolic mem
+unset zpu_symbolic_mem
+declare -a zpu_symbolic_mem
+
 ## basic logic gates
 zpu_AND() {
 }
@@ -415,4 +419,21 @@ zpu_READ() {
 }
 
 zpu_WRITE() {
+}
+
+## raw mem instructions
+# copy memory indice contents to another memory indice
+zpu_CPY() {
+}
+
+# delete contents of a memory indice (set to empty)
+zpu_CLR() {
+}
+
+# combined copy + clear (move contents of one indice to another indice)
+zpu_MOV() {
+}
+
+# replace bytes in a memory indice with specified register indice contents, with lseek and rseek
+zpu_BREP() {
 }
