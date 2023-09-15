@@ -434,6 +434,7 @@ zpu_CLR() {
 zpu_MOV() {
 }
 
-# replace bytes in a memory indice with specified register indice contents, with lseek and rseek
-zpu_BREP() {
+# add or replace bytes in a memory indice with specified register indice contents, with lseek and rseek
+zpu_BMODIF() {
 }
+
