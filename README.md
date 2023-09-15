@@ -19,4 +19,4 @@ Yes. This project is a bit of a challenge for me, and I find it easier on my bra
 
     Q: Does this have any practical use-cases?
 
-¯\\_(ツ)_/¯
+¯\\\_(ツ)\_/¯
