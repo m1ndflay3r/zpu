@@ -137,13 +137,13 @@ zpu_JMPTO() {
   # fail if zpu_jmpto_target_addr higher than memory indice count
     [ "$zpu_jmpto_target_addr" -gt "$zpu_sparse_mem_item_count" ] && \
       zpu_jmpto_fail && \
-      print -n 'Out Of Bounds)' && \
+      print 'Out Of Bounds)' && \
       return 1
 
   # fail if zpu_jmpto_target_addr is less than 1 (first memory indice)
     [ "$zpu_jmpto_target_addr" -lt "1" ] && \
       zpu_jmpto_fail && \
-      print -n 'target address < 1' && \
+      print 'target address < 1' && \
       return 1
 
   # save current pointer location to zpu_jmpto_prev_loc
