@@ -147,10 +147,10 @@ zpu_JMPTO() {
       return 1
 
   # save current pointer location to zpu_jmpto_prev_loc
-  export zpu_jmpto_prev_loc=$zpu_pointer
+  zpu_jmpto_prev_loc=$zpu_pointer
 
   # set pointer to target address
-  export zpu_pointer=$zpu_jmpto_target_addr
+  zpu_pointer=$zpu_jmpto_target_addr
 }
 
 zpu_JMPBK() {
