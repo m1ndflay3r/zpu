@@ -35,6 +35,10 @@ unset zpu_store_rseek
 unset zpu_symbolic_mem
 declare -a zpu_symbolic_mem
 
+## reset jmpto + jmpbk
+unset zpu_jmpto_prev_loc
+unset zpu_jmpto_target_addr
+
 ## basic logic gates
 zpu_AND() {
 }
@@ -112,9 +116,46 @@ zpu_RJMP() {
 }
 
 zpu_JMPTO() {
+
+  # failure printout
+  zpu_jmpto_fail() {
+    print -n 'Received invalid JMPTO instruction ('
+  }
+
+  # fail if zpu_jmpto_target_addr is empty
+  [ -z "$zpu_jmpto_target_addr" ] && \
+    zpu_jmpto_fail && \
+    print 'null target address)' && \
+    return 1
+
+  # fail if zpu_jmpto_target_addr is not a valid integer
+  ! [[ $zpu_jmpto_target_addr =~ ^[0-9]+$ ]] && \
+    zpu_jmpto_fail && \
+    print 'received non-integer)' && \
+    return 1
+
+  # fail if zpu_jmpto_target_addr higher than memory indice count
+    [ "$zpu_jmpto_target_addr" -gt "$zpu_sparse_mem_item_count" ] && \
+      zpu_jmpto_fail && \
+      print -n 'Out Of Bounds)' && \
+      return 1
+
+  # fail if zpu_jmpto_target_addr is less than 1 (first memory indice)
+    [ "$zpu_jmpto_target_addr" -lt "1" ] && \
+      zpu_jmpto_fail && \
+      print -n 'target address < 1' && \
+      return 1
+
+  # save current pointer location to zpu_jmpto_prev_loc
+  export zpu_jmpto_prev_loc=$zpu_pointer
+
+  # set pointer to target address
+  export zpu_pointer=$zpu_jmpto_target_addr
 }
 
 zpu_JMPBK() {
+  # set JMPTO target address to value of prev loc variable, execute JMPTO
+  zpu_jmpto_target_addr="$zpu_jmpto_prev_loc" zpu_JMPTO
 }
 
 ## load + store
