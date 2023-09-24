@@ -479,3 +479,55 @@ zpu_MOV() {
 zpu_BMODIF() {
 }
 
+## symbolic instructions
+
+# create
+zpu_CRSYM() {
+
+  # failure printout
+  zpu_crsym_fail() {
+    print -n 'Received invalid CRSYM instruction ('
+  }
+
+  # fail on empty symbol
+  [ -z "$zpu_crsym_symbol" ] && \
+    zpu_crsym_fail && \
+    print 'null symbol)' && \
+    return 1
+
+  # fail on empty mem indice
+  [ -z "$zpu_crsym_addr" ] && \
+    zpu_crsym_fail && \
+    print 'null addr)' && \
+    return 1
+
+  # fail on empty lseek || empty rseek
+  ([ -z "$zpu_crsym_lseek" ] || [ -z "$zpu_crsym_rseek" ]) && \
+    zpu_crsym_fail && \
+    print 'null [l/r]seek)' && \
+    return 1
+
+  # fail if mem indice || lseek || rseek is not valid int
+  (! [[ $zpu_crsym_lseek =~ ^[0-9]+$ ]] || ! [[ $zpu_crsym_rseek =~ ^[0-9]+$ ]] || ! [[ $zpu_crsym_addr =~ ^[0-9]+$ ]]) && \
+    zpu_crsym_fail && \
+    print 'invalid input)' && \
+    return 1
+
+  # fail if mem indice > total mem indices or mem indice < 1
+  ([ "$zpu_crsym_addr" -gt "$zpu_sparse_mem_item_count" ] || [ "$zpu_crsym_addr" -lt "1" ]) && \
+    zpu_crsym_fail && \
+    print 'Out Of Bounds)' && \
+    return 1
+
+  # add symbol to symbolic mem. Odd num indices store symbols, with the following even number storing address, lseek, and rseek
+  zpu_symbolic_mem+=("$zpu_crsym_symbol")
+  zpu_symbolic_mem+=("$zpu_crsym_addr $zpu_crsym_lseek $zpu_crsym_rseek")
+}
+
+# lookup
+zpu_lksym() {
+}
+
+# delete
+zpu_rmsym() {
+}
