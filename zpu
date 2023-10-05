@@ -496,8 +496,8 @@ zpu_WRITE() {
     print 'invalid seek)' && \
     return 1
 
-  # error if no filename given for write
-  [ -z "$zpu_write_fname" ] && \
+  # error if no filename given for write (unless is print)
+  ([ -z "$zpu_write_fname" ] && [ "$zpu_write_isprint" = 0 ]) && \
     zpu_write_fail && \
     print 'null fname)' && \
     return 1
@@ -519,14 +519,15 @@ zpu_WRITE() {
     printf "%s""$zpu_to_write" > "$zpu_write_fname" && \
     zpu_write_return=0
 
+  [ "$zpu_write_isprint" = 1 ] && \
+    printf "%s""$zpu_to_write" && \
+    zpu_write_return=0
+
   zpu_write_repl=0
+  zpu_write_isprint=0
 
   # return
   return $zpu_write_return
-}
-
-## print
-zpu_PRINT() {
 }
 
 ## raw mem instructions
