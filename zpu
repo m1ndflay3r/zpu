@@ -496,6 +496,10 @@ zpu_WRITE() {
     print 'invalid seek)' && \
     return 1
 
+  # set isprint to 0 if empty
+  [ -z "$zpu_write_isprint" ] && \
+    zpu_write_isprint=0
+
   # error if no filename given for write (unless is print)
   ([ -z "$zpu_write_fname" ] && [ "$zpu_write_isprint" = 0 ]) && \
     zpu_write_fail && \
